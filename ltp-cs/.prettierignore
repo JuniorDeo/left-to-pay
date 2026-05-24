@@ -1,0 +1,10 @@
+node_modules
+dist
+build
+coverage
+.vscode
+.idea
+*.log
+*.lock
+public/icons/backup-*
+

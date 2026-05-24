@@ -3,16 +3,24 @@
    Keep this lightweight; the app component defines theme variables and dark mode —
    we use a matching default gradient here. */
 
-html, body {
+html,
+body {
   height: 100%;
   margin: 0; /* remove browser default white gap on the edges */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #667eea; /* fallback solid color for status bar areas */
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  /* Prevent the iOS/home-screen webview overscroll from revealing white
+     by disabling body-level scrolling and overscroll. Scrolling will be
+     handled inside the fixed application container. */
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 /* Ensure the root component takes full height so min-height:100vh works as expected */
-app-root, #app-root {
+app-root,
+#app-root {
   display: block;
   min-height: 100%;
 }

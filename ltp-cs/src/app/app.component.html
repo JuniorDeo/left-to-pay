@@ -1,6 +1,9 @@
 <div class="app-container" [class.dark]="darkMode">
   <header class="header">
     <div class="header-top">
+      <button class="alloc-toggle" (click)="openSalaryConfig()" [title]="showSalaryConfig ? 'Fermer configuration' : 'Configurer salaire/allocations'">
+        {{ showSalaryConfig ? '✖️' : '⚙️' }}
+      </button>
       <h1>💰 Left To Pay</h1>
       <button class="theme-toggle" (click)="toggleDarkMode()" [title]="darkMode ? 'Mode clair' : 'Mode sombre'">
         {{ darkMode ? '☀️' : '🌙' }}
@@ -9,38 +12,53 @@
     <p class="current-month" *ngIf="month$ | async as month">{{ getMonthName() }}</p>
   </header>
 
+  <!-- GLOBAL ALERT (debtor) -->
+  <div *ngIf="shouldShowDebtAlert()" class="global-alert">⚠️ ALERTE : Économisable épuisé — dépassements non couverts : {{ getTotalOverage() | currency: 'EUR' }}. Vérifiez vos prélèvements et dépenses.</div>
+
   <!-- TAB NAVIGATION -->
   <nav class="tab-bar">
-    <button class="tab-btn" [class.active]="activeTab === 'home'" (click)="switchTab('home')">
-      🏠 Accueil
-    </button>
-    <button class="tab-btn" [class.active]="activeTab === 'calendar'" (click)="switchTab('calendar')">
-      📅 Calendrier
-    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'home'" (click)="switchTab('home')">🏠 Accueil</button>
+    <button class="tab-btn" [class.active]="activeTab === 'daily'" (click)="switchTab('daily')">🧾 Quotidien</button>
+    <button class="tab-btn" [class.active]="activeTab === 'calendar'" (click)="switchTab('calendar')">📅 Calendrier</button>
   </nav>
+
+  <!-- PANEL CONFIG SALAIRE / ALLOCATIONS (ouvrir via le bouton ⚙️) -->
+  <div *ngIf="showSalaryConfig" class="alloc-panel card">
+    <ng-container *ngIf="month$ | async as month">
+      <form [formGroup]="allocationForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="panelSalary">Salaire (€)</label>
+            <input formControlName="salary" id="panelSalary" type="number" placeholder="Salaire" class="input-full" inputmode="decimal" (focus)="setActiveAlloc('salary')" (blur)="setActiveAlloc(null)" />
+            <small *ngIf="suggestions['salary'] !== null" class="hint" (click)="applySuggestion('salary')">Suggestion: {{ suggestions['salary'] | currency: 'EUR' }} (cliquer pour appliquer)</small>
+          </div>
+          <div class="form-group">
+            <label for="charges">Charges prévues (€)</label>
+            <input formControlName="charges" id="charges" type="number" placeholder="Charges (prélèvements/virements)" class="input-full" inputmode="decimal" (focus)="setActiveAlloc('charges')" (blur)="setActiveAlloc(null)" />
+            <small *ngIf="suggestions['charges'] !== null" class="hint" (click)="applySuggestion('charges')">Suggestion: {{ suggestions['charges'] | currency: 'EUR' }} (cliquer pour appliquer)</small>
+          </div>
+          <div class="form-group">
+            <label for="flexible">Flexible (€)</label>
+            <input formControlName="flexible" id="flexible" type="number" placeholder="Dépenses quotidiennes" class="input-full" inputmode="decimal" (focus)="setActiveAlloc('flexible')" (blur)="setActiveAlloc(null)" />
+            <small *ngIf="suggestions['flexible'] !== null" class="hint" (click)="applySuggestion('flexible')">Suggestion: {{ suggestions['flexible'] | currency: 'EUR' }} (cliquer pour appliquer)</small>
+          </div>
+          <div class="form-group">
+            <label for="savable">Économisable (€)</label>
+            <input formControlName="savable" id="savable" type="number" placeholder="Épargne" class="input-full" inputmode="decimal" (focus)="setActiveAlloc('savable')" (blur)="setActiveAlloc(null)" />
+            <small *ngIf="suggestions['savable'] !== null" class="hint" (click)="applySuggestion('savable')">Suggestion: {{ suggestions['savable'] | currency: 'EUR' }} (cliquer pour appliquer)</small>
+          </div>
+        </div>
+        <div *ngIf="allocationForm?.errors?.['allocationMismatch']" class="form-error">⚠️ La somme des allocations doit être égale au salaire avant d'enregistrer.</div>
+        <div class="input-actions">
+          <button (click)="saveAllocations()" class="btn btn-primary">Enregistrer</button>
+          <button (click)="openSalaryConfig()" class="btn">Annuler</button>
+        </div>
+      </form>
+    </ng-container>
+  </div>
 
   <!-- HOME TAB -->
   <main class="main" *ngIf="activeTab === 'home'">
-    <!-- TODAY'S BALANCE - HERO SECTION -->
-    <section class="card card-primary today-card" *ngIf="month$ | async as month">
-      <div class="time-badge">
-        <span class="badge-date">{{ getTodayDate() }}</span>
-      </div>
-      <div class="balance-display" *ngIf="month.salary > 0">
-        <div class="balance-label">Solde actuel</div>
-        <div class="balance-amount" [class.negative]="getTodayBalance() < 0" [class.positive]="getTodayBalance() >= 0">
-          {{ getTodayBalance() | currency: 'EUR' }}
-        </div>
-        <div class="balance-status" [ngClass]="getTimeStatus().className">
-          <span class="status-icon">{{ getTimeStatus().icon }}</span>
-          <span class="status-message">{{ getTimeStatus().message }}</span>
-        </div>
-      </div>
-      <div class="empty-balance" *ngIf="month.salary === 0">
-        <p>Commencez par entrer votre salaire mensuel</p>
-      </div>
-    </section>
-
     <!-- RESTE À PAYER - SECTION PRINCIPALE -->
     <section class="card card-left-to-pay" *ngIf="month$ | async as month">
       <h2>🔴 Reste à Payer</h2>
@@ -48,98 +66,87 @@
         <div class="ltp-amount">{{ getLeftToPay() | currency: 'EUR' }}</div>
         <div class="ltp-subtitle">en prélèvements à venir ce mois</div>
       </div>
-      <div class="empty-state" *ngIf="month.salary === 0">
-        Entrez votre salaire pour voir les prélèvements à venir
-      </div>
-      <!-- Liste des prélèvements à venir -->
+      <div class="empty-state" *ngIf="month.salary === 0">Entrez votre salaire pour voir les prélèvements à venir</div>
+      <!-- Liste des prélèvements à venir (limité aux 3 prochains) -->
       <div *ngIf="getUpcomingPayments().length > 0" class="upcoming-list">
-        <div class="upcoming-item" *ngFor="let payment of getUpcomingPayments()">
+        <div class="upcoming-item" *ngFor="let payment of getNextUpcomingPayments(3)">
           <div class="upcoming-info">
             <span class="upcoming-label">{{ payment.label }}</span>
-            <span class="upcoming-date">le {{ payment.date }}/{{ (month.month + 1) }}</span>
+            <span class="upcoming-date">le {{ payment.date }}/{{ month.month + 1 }}</span>
           </div>
           <span class="upcoming-amount">- {{ payment.amount | currency: 'EUR' }}</span>
         </div>
+        <div *ngIf="hasMoreUpcoming(3)" class="see-more">
+          <button class="btn" (click)="switchTab('calendar')">Voir plus</button>
+        </div>
       </div>
-      <div *ngIf="month.payments.length > 0 && getUpcomingPayments().length === 0" class="empty-state">
-        ✅ Tous les prélèvements du mois sont passés !
-      </div>
+      <div *ngIf="month.payments.length > 0 && getUpcomingPayments().length === 0" class="empty-state">✅ Tous les prélèvements du mois sont passés !</div>
     </section>
 
-    <!-- Salary Input Section -->
-    <section class="card salary-card">
-      <h2>💵 Salaire Mensuel</h2>
-      <div class="form-group">
-        <label for="salary">Montant (€)</label>
-        <div class="input-wrapper">
-          <input
-            #salaryInput
-            id="salary"
-            type="number"
-            placeholder="Entrez votre salaire"
-            (change)="onSalaryChange()"
-            class="input-salary"
-            inputmode="decimal"
-          />
-          <button (click)="setSalary()" class="btn btn-primary">Ajouter</button>
+    <!-- TODAY'S BALANCE - HERO SECTION (breakdown salaire / charges / flexible / économisable) -->
+    <section class="card card-primary today-card" *ngIf="month$ | async as month">
+      <div class="salary-breakdown" *ngIf="month.salary > 0">
+        <div class="line">
+          <span class="label">Salaire</span>
+          <span class="value">{{ month.salary | currency: 'EUR' }}</span>
         </div>
-        <div class="display-salary" *ngIf="month$ | async as month">
-          <strong>{{ month.salary | currency: 'EUR' }}</strong>
+        <div class="line">
+          <span class="label">Charges prévues</span>
+          <span class="value"
+            >{{ month.chargesAllocation || 0 | currency: 'EUR' }}
+            <small class="muted">(programmés: {{ getTotalScheduledCharges() | currency: 'EUR' }})</small>
+          </span>
         </div>
+        <div class="line">
+          <span class="label">Flexible</span>
+          <span class="value"
+            >{{ month.flexibleAllocation || 0 | currency: 'EUR' }}
+            <small class="muted">— reste: {{ getFlexibleRemaining() | currency: 'EUR' }}</small>
+          </span>
+        </div>
+        <div class="line">
+          <span class="label">Économisable</span>
+          <span class="value"
+            >{{ month.savableAllocation || 0 | currency: 'EUR' }}
+            <small class="muted">— réel : {{ getRealSavableRemaining() | currency: 'EUR' }}</small>
+          </span>
+        </div>
+
+        <div class="budget-status" [class.ok]="(month.chargesAllocation || 0) >= getTotalScheduledCharges() && getFlexibleRemaining() >= 0" [class.alert]="(month.chargesAllocation || 0) < getTotalScheduledCharges() || getFlexibleRemaining() < 0">
+          <span *ngIf="(month.chargesAllocation || 0) >= getTotalScheduledCharges() && getFlexibleRemaining() >= 0">✅ Tout va bien</span>
+          <span *ngIf="(month.chargesAllocation || 0) < getTotalScheduledCharges()">⚠️ Charges prévues dépassées</span>
+          <span *ngIf="getFlexibleRemaining() < 0">⚠️ Flexible en négatif</span>
+        </div>
+      </div>
+      <div class="empty-balance" *ngIf="month.salary === 0">
+        <p>Commencez par configurer votre salaire et allocations (⚙️ en haut à gauche)</p>
       </div>
     </section>
 
     <!-- Payment Input Section -->
     <section class="card payment-input-card">
-      <h2>➕ Ajouter un Prélèvement</h2>
+      <h2>➕ Ajouter un Prélèvement/Virement</h2>
       <div class="form-group">
         <label for="paymentLabel">Libellé</label>
-        <input
-          #paymentLabel
-          id="paymentLabel"
-          type="text"
-          placeholder="Ex: Loyer, Netflix, etc."
-          class="input-full"
-          autocomplete="off"
-        />
+        <input #paymentLabel id="paymentLabel" type="text" placeholder="Ex: Loyer, Netflix, etc." class="input-full" autocomplete="off" />
       </div>
       <div class="form-row">
         <div class="form-group">
           <label for="paymentAmount">Montant (€)</label>
-          <input
-            #paymentAmount
-            id="paymentAmount"
-            type="number"
-            placeholder="Montant"
-            class="input-full"
-            inputmode="decimal"
-          />
+          <input #paymentAmount id="paymentAmount" type="number" placeholder="Montant" class="input-full" inputmode="decimal" />
         </div>
         <div class="form-group">
           <label for="paymentDate">Jour</label>
-          <input
-            #paymentDate
-            id="paymentDate"
-            type="number"
-            min="1"
-            max="31"
-            placeholder="Jour"
-            class="input-full"
-            inputmode="numeric"
-          />
+          <input #paymentDate id="paymentDate" type="number" min="1" max="31" placeholder="Jour" class="input-full" inputmode="numeric" />
         </div>
       </div>
-      <button (click)="addPayment()" class="btn btn-primary btn-full">
-        ➕ Ajouter Prélèvement
-      </button>
+      <button (click)="addPayment()" class="btn btn-primary btn-full">➕ Ajouter Prélèvement</button>
     </section>
 
     <!-- Payments List -->
     <section class="card payments-list-card" *ngIf="month$ | async as month">
-      <h2>📋 Prélèvements ({{ month.payments.length }})</h2>
-      <div *ngIf="month.payments.length === 0" class="empty-state">
-        Aucun prélèvement enregistré
-      </div>
+      <h2>📋 Prélèvements / Virements programmés ({{ month.payments.length }})</h2>
+      <div *ngIf="month.payments.length === 0" class="empty-state">Aucun prélèvement enregistré</div>
       <div *ngIf="month.payments.length > 0" class="payments-table">
         <div class="payment-row header">
           <div class="col-label">Libellé</div>
@@ -147,21 +154,12 @@
           <div class="col-amount">Montant</div>
           <div class="col-action">Action</div>
         </div>
-        <div
-          *ngFor="let payment of month.payments | sort: 'date'"
-          class="payment-row"
-        >
+        <div *ngFor="let payment of month.payments | sort: 'date'" class="payment-row">
           <div class="col-label">{{ payment.label }}</div>
           <div class="col-date">{{ payment.date }}</div>
           <div class="col-amount">{{ payment.amount | currency: 'EUR' }}</div>
           <div class="col-action">
-            <button
-              (click)="removePayment(payment.id)"
-              class="btn btn-small btn-danger"
-              title="Supprimer"
-            >
-              🗑️
-            </button>
+            <button (click)="removePayment(payment.id)" class="btn btn-small btn-danger" title="Supprimer">🗑️</button>
           </div>
         </div>
       </div>
@@ -172,16 +170,9 @@
   <main class="main" *ngIf="activeTab === 'calendar'">
     <section class="card calendar-card" *ngIf="month$ | async as month">
       <h2>📅 Calendrier des Prélèvements — {{ getMonthName() }}</h2>
-      <div *ngIf="month.payments.length === 0" class="empty-state">
-        Aucun prélèvement enregistré. Ajoutez-en depuis l'accueil.
-      </div>
+      <div *ngIf="month.payments.length === 0" class="empty-state">Aucun prélèvement enregistré. Ajoutez-en depuis l'accueil.</div>
       <div *ngIf="month.payments.length > 0" class="calendar-grid">
-        <div
-          *ngFor="let calDay of getCalendarDays()"
-          class="calendar-day"
-          [class.has-payments]="calDay.payments.length > 0"
-          [class.today]="calDay.isToday"
-        >
+        <div *ngFor="let calDay of getCalendarDays()" class="calendar-day" [class.has-payments]="calDay.payments.length > 0" [class.today]="calDay.isToday">
           <div class="cal-day-header">
             <span class="cal-day-name">{{ calDay.dayName }}</span>
             <span class="cal-day-number">{{ calDay.day }}</span>
@@ -191,6 +182,42 @@
               <span class="cal-payment-label">{{ p.label }}</span>
               <span class="cal-payment-amount">{{ p.amount | currency: 'EUR' }}</span>
             </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- QUOTIDIEN TAB -->
+  <main class="main" *ngIf="activeTab === 'daily'">
+    <section class="card daily-card" *ngIf="month$ | async as month">
+      <h2>🧾 Quotidien — Flexible restant : {{ getFlexibleRemaining() | currency: 'EUR' }}</h2>
+      <div *ngIf="(month.dailyExpenses || []).length === 0" class="empty-state">Aucune dépense quotidienne enregistrée</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="dailyLabel">Libellé</label>
+          <input #dailyLabel id="dailyLabel" type="text" placeholder="Ex: Déjeuner" class="input-full" />
+        </div>
+        <div class="form-group">
+          <label for="dailyAmount">Montant (€)</label>
+          <input #dailyAmount id="dailyAmount" type="number" placeholder="Montant" class="input-full" inputmode="decimal" />
+        </div>
+        <div class="form-group">
+          <label for="dailyDate">Jour</label>
+          <input #dailyDate id="dailyDate" type="number" min="1" max="31" placeholder="Jour" class="input-full" inputmode="numeric" />
+        </div>
+      </div>
+      <button (click)="addDailyExpense()" class="btn btn-primary">➕ Ajouter dépense quotidienne</button>
+
+      <div *ngIf="(month.dailyExpenses || []).length > 0" class="daily-list">
+        <div class="daily-item" *ngFor="let d of month.dailyExpenses">
+          <div class="daily-info">
+            <span class="daily-label">{{ d.label }}</span>
+            <span class="daily-date">le {{ d.date }}/{{ month.month + 1 }}</span>
+          </div>
+          <div class="daily-amount">- {{ d.amount | currency: 'EUR' }}</div>
+          <div class="daily-action">
+            <button (click)="removeDailyExpense(d.id)" class="btn btn-small btn-danger" title="Supprimer">🗑️</button>
           </div>
         </div>
       </div>

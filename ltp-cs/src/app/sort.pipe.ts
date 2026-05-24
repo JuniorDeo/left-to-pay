@@ -3,7 +3,7 @@ import { Pipe, PipeTransform } from '@angular/core';
 @Pipe({
   name: 'sort',
   pure: true,
-  standalone: true
+  standalone: true,
 })
 export class SortPipe implements PipeTransform {
   transform<T>(array: T[], key: keyof T): T[] {
@@ -27,4 +27,3 @@ export class SortPipe implements PipeTransform {
     });
   }
 }
-
