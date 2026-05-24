@@ -1,0 +1,546 @@
+:host {
+  --primary-color: #4f46e5;
+  --primary-light: rgba(79, 70, 229, 0.1);
+  --success-color: #10b981;
+  --danger-color: #ef4444;
+  --warning-color: #f59e0b;
+  --bg-app: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --bg-card: #ffffff;
+  --bg-input: #ffffff;
+  --bg-light: #f3f4f6;
+  --bg-payment-row: #fafafa;
+  --bg-upcoming: #fef2f2;
+  --border-upcoming: #fecaca;
+  --text-primary: #1f2937;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
+  --border-color: #e5e7eb;
+  --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --salary-bg: #f0fdf4;
+  --salary-border: #dcfce7;
+  --salary-text: #166534;
+  --hero-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --hero-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+  --cal-payment-bg: white;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: var(--text-primary);
+  background-color: var(--bg-light);
+  display: block;
+  min-height: 100vh;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* DARK MODE VARIABLES */
+.dark {
+  --primary-color: #818cf8;
+  --primary-light: rgba(129, 140, 248, 0.15);
+  --success-color: #34d399;
+  --danger-color: #f87171;
+  --warning-color: #fbbf24;
+  --bg-app: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+  --bg-card: #1f2937;
+  --bg-input: #374151;
+  --bg-light: #111827;
+  --bg-payment-row: #283040;
+  --bg-upcoming: #3b1c1c;
+  --border-upcoming: #7f1d1d;
+  --text-primary: #f3f4f6;
+  --text-secondary: #d1d5db;
+  --text-muted: #9ca3af;
+  --border-color: #374151;
+  --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+  --salary-bg: #064e3b;
+  --salary-border: #065f46;
+  --salary-text: #6ee7b7;
+  --hero-gradient: linear-gradient(135deg, #312e81 0%, #4c1d95 100%);
+  --hero-shadow: 0 10px 30px rgba(49, 46, 129, 0.6);
+  --cal-payment-bg: #374151;
+}
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--bg-app);
+  overflow-x: hidden;
+}
+.header {
+  background: rgba(0, 0, 0, 0.15);
+  color: white;
+  padding: 1rem;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  position: relative;
+}
+.header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+.theme-toggle {
+  position: absolute;
+  right: 0;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, transform 0.2s;
+}
+.theme-toggle:active {
+  transform: scale(0.9);
+  background: rgba(255, 255, 255, 0.25);
+}
+.current-month {
+  margin: 0.25rem 0 0 0;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+.main {
+  flex: 1;
+  padding: 1rem;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.card {
+  background: var(--bg-card);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-color);
+}
+.card h2 {
+  margin: 0 0 1rem 0;
+  font-size: 1.2rem;
+  color: var(--text-primary);
+  border-bottom: 2px solid var(--primary-color);
+  padding-bottom: 0.75rem;
+}
+/* TODAY HERO CARD */
+.card-primary.today-card {
+  background: var(--hero-gradient);
+  color: white;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  border: none;
+  box-shadow: var(--hero-shadow);
+}
+.balance-label {
+  font-size: 0.95rem;
+  opacity: 0.9;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.balance-amount {
+  font-size: 3rem;
+  font-weight: 900;
+  margin: 0.5rem 0;
+  line-height: 1;
+}
+.balance-amount.positive {
+  color: #86efac;
+}
+.balance-amount.negative {
+  color: #fca5a5;
+}
+.balance-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.balance-status.status-ok {
+  background: rgba(134, 239, 172, 0.2);
+  color: #86efac;
+}
+.balance-status.status-warning {
+  background: rgba(252, 165, 165, 0.2);
+  color: #fca5a5;
+}
+.balance-status.status-danger {
+  background: rgba(252, 165, 165, 0.3);
+}
+/* FORMS */
+.form-group {
+  margin-bottom: 1rem;
+}
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+.form-group input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  background: var(--bg-input);
+  color: var(--text-primary);
+}
+.form-group input::placeholder {
+  color: var(--text-muted);
+}
+.form-group input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+/* BUTTONS */
+.btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-primary {
+  background-color: var(--primary-color);
+  color: white;
+}
+.btn-primary:active {
+  background-color: #4338ca;
+}
+.btn-danger {
+  background-color: var(--danger-color);
+  color: white;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+.btn-full {
+  width: 100%;
+}
+.btn-small {
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.85rem !important;
+}
+.display-salary {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: var(--salary-bg);
+  border: 1px solid var(--salary-border);
+  border-radius: 0.5rem;
+  color: var(--salary-text);
+  font-weight: 600;
+  text-align: center;
+}
+.empty-state {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+.payment-row {
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-payment-row);
+}
+.payment-row.header {
+  display: none;
+}
+.col-label {
+  color: var(--text-primary);
+}
+.col-label::before { content: 'Libellé: '; font-weight: 700; color: var(--primary-color); }
+.col-date {
+  color: var(--text-primary);
+}
+.col-date::before { content: 'Jour: '; font-weight: 700; color: var(--text-secondary); }
+.col-amount {
+  color: var(--text-primary);
+}
+.col-amount::before { content: 'Montant: '; font-weight: 700; color: var(--danger-color); }
+.col-action {
+  color: var(--text-primary);
+}
+.daily-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+.daily-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem;
+  background: var(--bg-light);
+  border-radius: 0.75rem;
+  border: 2px solid var(--border-color);
+  aspect-ratio: 1;
+}
+.daily-item.today {
+  border: 3px solid var(--primary-color);
+  background: var(--primary-light);
+}
+.day-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+.day-balance {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-top: 0.25rem;
+}
+.day-balance.positive {
+  color: var(--success-color);
+}
+.day-balance.negative {
+  color: var(--danger-color);
+}
+/* TAB BAR */
+.tab-bar {
+  display: flex;
+  background: rgba(0, 0, 0, 0.1);
+  padding: 0;
+  gap: 0;
+}
+.tab-btn {
+  flex: 1;
+  padding: 0.85rem 1rem;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  border-bottom: 3px solid transparent;
+}
+.tab-btn.active {
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+  border-bottom-color: white;
+}
+.tab-btn:active {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* RESTE À PAYER CARD */
+.card-left-to-pay {
+  border-left: 5px solid var(--danger-color);
+}
+.card-left-to-pay h2 {
+  border-bottom-color: var(--danger-color);
+}
+.left-to-pay-hero {
+  text-align: center;
+  padding: 1rem 0;
+}
+.ltp-amount {
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: var(--danger-color);
+  line-height: 1.2;
+}
+.ltp-subtitle {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-top: 0.5rem;
+}
+.upcoming-list {
+  margin-top: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.upcoming-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: var(--bg-upcoming);
+  border: 1px solid var(--border-upcoming);
+  border-radius: 0.5rem;
+}
+.upcoming-info {
+  display: flex;
+  flex-direction: column;
+}
+.upcoming-label {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.upcoming-date {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.upcoming-amount {
+  font-weight: 700;
+  color: var(--danger-color);
+  font-size: 1.05rem;
+}
+
+/* CALENDAR */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
+}
+.calendar-day {
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  background: var(--bg-light);
+  border: 1px solid var(--border-color);
+  min-height: 60px;
+}
+.calendar-day.has-payments {
+  background: var(--bg-upcoming);
+  border-color: var(--border-upcoming);
+}
+.calendar-day.today {
+  border: 2px solid var(--primary-color);
+  background: var(--primary-light);
+}
+.cal-day-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+.cal-day-name {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.cal-day-number {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.cal-day-payments {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.cal-payment {
+  display: flex;
+  flex-direction: column;
+  background: var(--cal-payment-bg);
+  padding: 0.25rem 0.35rem;
+  border-radius: 0.25rem;
+  border-left: 3px solid var(--danger-color);
+}
+.cal-payment-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cal-payment-amount {
+  font-size: 0.6rem;
+  color: var(--danger-color);
+  font-weight: 700;
+}
+
+/* TABLET */
+@media (min-width: 640px) {
+  .header h1 { font-size: 2rem; }
+  .card { padding: 1.75rem; }
+  .balance-amount { font-size: 3.5rem; }
+  .form-row { flex-direction: row; }
+  .input-wrapper { flex-direction: row; }
+  .daily-list { grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  .payment-row { display: grid; grid-template-columns: 2fr 1fr 1.5fr 0.5fr; gap: 1rem; }
+  .payment-row.header { display: grid; background-color: var(--bg-light); font-weight: 700; color: var(--text-primary); }
+  .col-label::before, .col-date::before, .col-amount::before { content: ''; }
+  .ltp-amount { font-size: 3rem; }
+}
+/* MOBILE calendar adaptation */
+@media (max-width: 639px) {
+  .calendar-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .calendar-day {
+    min-height: 50px;
+  }
+}
+/* DESKTOP */
+@media (min-width: 1024px) {
+  .main { max-width: 1200px; margin: 0 auto; }
+  .daily-list { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); }
+}
+
+/* FOOTER */
+.app-footer {
+  padding: 1rem 1rem;
+  text-align: center;
+  color: var(--text-muted);
+  background: transparent;
+  font-size: 0.95rem; /* augmenté pour meilleure visibilité */
+  font-weight: 600; /* un peu plus visible */
+  border-top: 1px solid transparent;
+}
+.app-footer small {
+  color: var(--text-primary); /* texte plus visible */
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+/* Assurer contraste si la footer est sur fond clair ou foncé */
+.dark .app-footer {
+  border-top-color: rgba(255,255,255,0.06);
+}
+:not(.dark) .app-footer {
+  border-top-color: rgba(0,0,0,0.06);
+}
+
+/* Responsive : légèrement plus grand sur grands écrans */
+@media (min-width: 1024px) {
+  .app-footer {
+    font-size: 1rem;
+  }
+  .app-footer small {
+    font-size: 1rem;
+  }
+}
