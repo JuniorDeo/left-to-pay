@@ -1,1 +1,22 @@
-/* You can add global styles to this file, and also import other style files */
+/* Global base styles to remove default white margins and set a matching background
+   so on large screens / around rounded cards we don't see the default white page edges.
+   Keep this lightweight; the app component defines theme variables and dark mode —
+   we use a matching default gradient here. */
+
+html, body {
+  height: 100%;
+  margin: 0; /* remove browser default white gap on the edges */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Ensure the root component takes full height so min-height:100vh works as expected */
+app-root, #app-root {
+  display: block;
+  min-height: 100%;
+}
+
+/* Optional: when you prefer a neutral background instead of the gradient,
+   change the background value above to a color like #f3f4f6 or #111827 for dark.
+ */
