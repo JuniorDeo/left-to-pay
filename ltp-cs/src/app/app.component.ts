@@ -39,6 +39,14 @@ export class AppComponent {
     this.initAllocationForm();
   }
 
+  goToNextMonth(): void {
+    this.moneyManager.nextMonth();
+  }
+
+  goToPrevMonth(): void {
+    this.moneyManager.prevMonth();
+  }
+
   ngOnInit(): void {
     // no continuous patching to avoid overwriting user input while editing
     // the form will be populated when the panel is opened

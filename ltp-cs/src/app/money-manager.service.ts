@@ -56,6 +56,63 @@ export class MoneyManagerService {
     return this.monthSubject.getValue();
   }
 
+  /**
+   * Replace current month in the app. If stored data exists for that month, load it.
+   * Otherwise, create a default Month object (copying allocations/salary from previous month for convenience).
+   */
+  setMonthByYearMonth(year: number, monthIndex: number): void {
+    const key = `ltp-${year}-${monthIndex}`;
+    const stored = localStorage.getItem(key);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored) as Month;
+        this.monthSubject.next(parsed);
+        return;
+      } catch (e) {
+        // fallthrough to create default
+      }
+    }
+
+    // create default month, reusing allocations/salary from current month
+    const current = this.monthSubject.getValue();
+    const newMonth: Month = {
+      year,
+      month: monthIndex,
+      salary: current.salary || 0,
+      // copy scheduled payments from current month so prélèvements restent récurrents
+      payments: (current.payments || []).map(p => ({ ...p })),
+      chargesAllocation: current.chargesAllocation || 0,
+      flexibleAllocation: current.flexibleAllocation || 0,
+      savableAllocation: current.savableAllocation || 0,
+      // start of month: clear daily expenses
+      dailyExpenses: [],
+    };
+    this.monthSubject.next(newMonth);
+    // do not immediately persist an empty month (will be saved when user updates)
+  }
+
+  nextMonth(): void {
+    const m = this.monthSubject.getValue();
+    let year = m.year;
+    let month = m.month + 1;
+    if (month > 11) {
+      month = 0;
+      year += 1;
+    }
+    this.setMonthByYearMonth(year, month);
+  }
+
+  prevMonth(): void {
+    const m = this.monthSubject.getValue();
+    let year = m.year;
+    let month = m.month - 1;
+    if (month < 0) {
+      month = 11;
+      year -= 1;
+    }
+    this.setMonthByYearMonth(year, month);
+  }
+
   setSalary(amount: number): void {
     const current = this.monthSubject.getValue();
     const updated = { ...current, salary: amount };

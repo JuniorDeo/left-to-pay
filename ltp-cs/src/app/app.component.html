@@ -9,7 +9,11 @@
         {{ darkMode ? '☀️' : '🌙' }}
       </button>
     </div>
-    <p class="current-month" *ngIf="month$ | async as month">{{ getMonthName() }}</p>
+    <div class="month-nav" *ngIf="month$ | async as month">
+      <button class="month-btn" (click)="goToPrevMonth()" title="Mois précédent">◀</button>
+      <p class="current-month">{{ getMonthName() }}</p>
+      <button class="month-btn" (click)="goToNextMonth()" title="Mois suivant">▶</button>
+    </div>
   </header>
 
   <!-- GLOBAL ALERT (debtor) -->

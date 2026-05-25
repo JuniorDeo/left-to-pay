@@ -150,6 +150,25 @@
   font-size: 0.9rem;
   opacity: 0.9;
 }
+
+.month-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.month-btn {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.12);
+  color: white;
+  width: 32px;
+  height: 28px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.dark .month-btn {
+  border-color: rgba(255,255,255,0.12);
+}
 .main {
   flex: 1;
   padding: 1rem;

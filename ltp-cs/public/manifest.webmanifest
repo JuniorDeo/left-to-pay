@@ -1,6 +1,6 @@
 {
-  "name": "ltp-cs",
-  "short_name": "ltp-cs",
+  "name": "Left To Pay",
+  "short_name": "Left To Pay",
   "display": "standalone",
   "scope": "./",
   "start_url": "./",
