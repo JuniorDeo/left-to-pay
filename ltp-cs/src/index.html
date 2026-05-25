@@ -5,13 +5,13 @@
     <title>Left To Pay</title>
     <base href="/" />
     <!-- PWA / iOS status bar / theme color -->
-    <!-- theme-color will be updated dynamiquement selon le mode clair/sombre -->
+    <!-- theme-color will be updated dynamically according to light/dark mode -->
     <meta name="theme-color" content="#667eea" id="meta-theme-color" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <!-- values: default | black | black-translucent. 'black-translucent' permet au contenu
-         d'être rendu sous la barre système (utiliser env(safe-area-inset-top) pour compenser) -->
+    <!-- values: default | black | black-translucent. 'black-translucent' allows content
+         to be rendered under the system bar (use env(safe-area-inset-top) to compensate) -->
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <!-- viewport-fit=cover is essentiel pour supporter la safe-area / notch sur iOS PWA -->
+    <!-- viewport-fit=cover is essential to support the safe-area / notch on iOS PWA -->
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
     <link rel="manifest" href="manifest.webmanifest" />
@@ -21,33 +21,5 @@
   <body>
     <app-root></app-root>
     <noscript>Please enable JavaScript to continue using this application.</noscript>
-
-    <!-- Script: met à jour theme-color et le background du document selon prefers-color-scheme -->
-    <script>
-      (function() {
-        const meta = document.querySelector('meta[name="theme-color"]#meta-theme-color');
-        if (!meta) return;
-
-        // Couleurs adaptées à ton design : ajuste si besoin
-        const darkColor = '#0b1220'; // couleur de fond dark (ex: ton dégradé sombre approximé)
-        // Couleur utilisée en light mode — adaptée à la palette de l'app (haut du gradient)
-        const lightColor = '#667eea';
-
-        function applyTheme() {
-          const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-          const color = isDark ? darkColor : lightColor;
-          meta.setAttribute('content', color);
-          document.documentElement.style.backgroundColor = color; // garantir la couleur sous la status bar
-        }
-
-        applyTheme();
-
-        if (window.matchMedia) {
-          const mq = window.matchMedia('(prefers-color-scheme: dark)');
-          if (mq.addEventListener) mq.addEventListener('change', applyTheme);
-          else if (mq.addListener) mq.addListener(applyTheme);
-        }
-      })();
-    </script>
   </body>
 </html>

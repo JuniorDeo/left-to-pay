@@ -50,10 +50,49 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Mettre à jour le fuseau horaire et forcer rafraîchissement de l'affichage
+    // Update timezone and force refresh of the display
     this.month$.subscribe(() => {
       this.timeZone = this.moneyManager.getCurrentTimeZone();
     });
+    // Initialize meta/theme color for the status bar (light/dark)
+    this.setupThemeColor();
+  }
+
+  /**
+   * Initialize and listen for changes to the prefers-color-scheme media query
+   * to update <meta name="theme-color"> and the document background.
+   */
+  private setupThemeColor(): void {
+    const meta = document.querySelector('meta[name="theme-color"]#meta-theme-color') as HTMLMetaElement | null;
+    if (!meta) return;
+
+    const darkColor = '#0b1220';
+    const lightColor = '#667eea';
+
+    // Apply initial theme based on user preference
+    const applyTheme = () => {
+      const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const color = isDark ? darkColor : lightColor;
+      try {
+        meta.setAttribute('content', color);
+      } catch (e) {
+        // ignore
+      }
+      // also set document background to avoid white area under the notch in standalone mode
+      (document.documentElement as HTMLElement).style.backgroundColor = color;
+    };
+
+    applyTheme();
+
+    // Listen for changes in the prefers-color-scheme media query to update theme in real-time
+    if (window.matchMedia) {
+      const mq = window.matchMedia('(prefers-color-scheme: dark)');
+      if ((mq as any).addEventListener) {
+        (mq as any).addEventListener('change', applyTheme);
+      } else if ((mq as any).addListener) {
+        (mq as any).addListener(applyTheme);
+      }
+    }
   }
 
   private initAllocationForm(): void {
@@ -292,7 +331,7 @@ export class AppComponent implements OnInit {
   }
 
   /**
-   * Retourne les N prochains prélèvements (par défaut 3)
+   * Return the next N upcoming payments (default 3)
    */
   getNextUpcomingPayments(count = 3): Payment[] {
     return this.getUpcomingPayments().slice(0, count);

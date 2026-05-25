@@ -30,7 +30,7 @@
     <button class="tab-btn" [class.active]="activeTab === 'calendar'" (click)="switchTab('calendar')">📅 Calendrier</button>
   </nav>
 
-  <!-- PANEL CONFIG SALAIRE / ALLOCATIONS (ouvrir via le bouton ⚙️) -->
+  <!-- SALARY / ALLOCATIONS CONFIG PANEL (open via the ⚙️ button) -->
   <div *ngIf="showSalaryConfig" class="alloc-panel card">
     <ng-container *ngIf="month$ | async as month">
       <div class="settings-panel-header">
@@ -78,7 +78,7 @@
 
   <!-- HOME TAB -->
   <main class="main" *ngIf="activeTab === 'home'">
-    <!-- RESTE À PAYER - SECTION PRINCIPALE -->
+      <!-- OUTSTANDING BALANCE - MAIN SECTION -->
     <section class="card card-left-to-pay" *ngIf="month$ | async as month">
       <h2>🔴 Reste à Payer</h2>
       <div class="left-to-pay-hero" *ngIf="month.salary > 0">
@@ -86,7 +86,7 @@
         <div class="ltp-subtitle">en prélèvements à venir ce mois</div>
       </div>
       <div class="empty-state" *ngIf="month.salary === 0">Entrez votre salaire pour voir les prélèvements à venir</div>
-      <!-- Liste des prélèvements à venir (limité aux 3 prochains) -->
+      <!-- List of upcoming payments (limited to the next 3) -->
       <div *ngIf="getUpcomingPayments().length > 0" class="upcoming-list">
         <div class="upcoming-item" *ngFor="let payment of getNextUpcomingPayments(3)">
           <div class="upcoming-info">
@@ -102,7 +102,7 @@
       <div *ngIf="month.payments.length > 0 && getUpcomingPayments().length === 0" class="empty-state">✅ Tous les prélèvements du mois sont passés !</div>
     </section>
 
-    <!-- TODAY'S BALANCE - HERO SECTION (breakdown salaire / charges / flexible / économisable) -->
+    <!-- TODAY'S BALANCE - HERO SECTION (breakdown salary / charges / flexible / savable) -->
     <section class="card card-primary today-card" *ngIf="month$ | async as month">
       <div class="salary-breakdown" *ngIf="month.salary > 0">
         <div class="line">
@@ -207,7 +207,7 @@
     </section>
   </main>
 
-  <!-- QUOTIDIEN TAB -->
+  <!-- DAILY TAB -->
   <main class="main" *ngIf="activeTab === 'daily'">
     <section class="card daily-card" *ngIf="month$ | async as month">
       <h2>🧾 Quotidien — Flexible restant : {{ getFlexibleRemaining() | currency: 'EUR' }}</h2>

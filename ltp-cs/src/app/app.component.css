@@ -988,17 +988,17 @@
   text-align: center;
   color: var(--text-muted);
   background: transparent;
-  font-size: 0.95rem; /* augmenté pour meilleure visibilité */
-  font-weight: 600; /* un peu plus visible */
+  font-size: 0.95rem; /* increased for better visibility */
+  font-weight: 600; /* slightly more visible */
   border-top: 1px solid transparent;
 }
 .app-footer small {
-  color: var(--text-primary); /* texte plus visible */
+  color: var(--text-primary);
   font-size: 0.95rem;
   font-weight: 600;
 }
 
-/* Assurer contraste si la footer est sur fond clair ou foncé */
+/* Ensure contrast if the footer is on a light or dark background */
 .dark .app-footer {
   border-top-color: rgba(255, 255, 255, 0.06);
 }
@@ -1006,7 +1006,7 @@
   border-top-color: rgba(0, 0, 0, 0.06);
 }
 
-/* Responsive : légèrement plus grand sur grands écrans */
+/* Responsive: slightly larger on large screens */
 @media (min-width: 1024px) {
   .app-footer {
     font-size: 1rem;

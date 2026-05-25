@@ -20,11 +20,11 @@ export interface Month {
   month: number; // 0-11 (January = 0)
   salary: number;
   payments: Payment[];
-  // Allocations/configuration utilisateur
-  chargesAllocation?: number; // montant prévu pour charges/virements programmés
-  flexibleAllocation?: number; // montant alloué aux dépenses quotidiennes
-  savableAllocation?: number; // montant destiné à l'épargne
-  dailyExpenses?: DailyExpense[]; // dépenses quotidiennes pointées
+  // User allocations / configuration
+  chargesAllocation?: number; // planned amount for scheduled charges / transfers
+  flexibleAllocation?: number; // amount allocated for daily expenses
+  savableAllocation?: number; // amount designated for savings
+  dailyExpenses?: DailyExpense[]; // recorded daily expenses
 }
 
 @Injectable({
@@ -36,7 +36,7 @@ export class MoneyManagerService {
 
   constructor() {
     this.loadFromLocalStorage();
-    // démarre le watcher qui détecte le passage du jour / changement de mois
+    // start the watcher that detects day rollovers / month changes
     this.startDayWatcher();
   }
 
@@ -81,7 +81,7 @@ export class MoneyManagerService {
       year,
       month: monthIndex,
       salary: current.salary || 0,
-      // copy scheduled payments from current month so prélèvements restent récurrents
+      // copy scheduled payments from current month so recurring payments remain
       payments: (current.payments || []).map(p => ({ ...p })),
       chargesAllocation: current.chargesAllocation || 0,
       flexibleAllocation: current.flexibleAllocation || 0,
@@ -123,7 +123,7 @@ export class MoneyManagerService {
   }
 
   /**
-   * Définit les allocations de budget (charges, flexible, économisable)
+   * Set budget allocations (charges, flexible, savable)
    */
   setAllocations(chargesAllocation: number, flexibleAllocation: number, savableAllocation: number): void {
     const current = this.monthSubject.getValue();
@@ -132,7 +132,7 @@ export class MoneyManagerService {
     this.saveToLocalStorage();
   }
 
-  /** Ajout / suppression de dépenses quotidiennes (Quotidien) */
+  /** Add / remove daily expenses (Daily) */
   addDailyExpense(label: string, amount: number, date: number): void {
     const current = this.monthSubject.getValue();
     const expense: DailyExpense = { id: Date.now().toString(), label, amount, date };
@@ -151,13 +151,13 @@ export class MoneyManagerService {
     this.saveToLocalStorage();
   }
 
-  /** Somme totale des prélèvements programmés */
+  /** Total sum of scheduled payments */
   getTotalScheduledCharges(): number {
     const month = this.monthSubject.getValue();
     return month.payments.reduce((sum, p) => sum + p.amount, 0);
   }
 
-  /** Retourne le reste du flexible (allocation - dépenses quotidiennes) */
+  /** Return remaining flexible (allocation - daily expenses) */
   getFlexibleRemaining(): number {
     const month = this.monthSubject.getValue();
     const flexible = month.flexibleAllocation || 0;
@@ -166,7 +166,7 @@ export class MoneyManagerService {
   }
 
   /**
-   * Montant de dépassement des charges (si les prélèvements programmés > allocation de charges)
+   * Amount of charge overage (if scheduled payments > allocated charges)
    */
   getChargeOverage(): number {
     const month = this.monthSubject.getValue();
@@ -176,7 +176,7 @@ export class MoneyManagerService {
   }
 
   /**
-   * Montant négatif du flexible (si flexibleRemaining < 0 retourne valeur positive du dépassement)
+   * Negative amount of flexible (if flexibleRemaining < 0 returns positive overage value)
    */
   getFlexibleNegativeAmount(): number {
     const remaining = this.getFlexibleRemaining();
@@ -184,8 +184,8 @@ export class MoneyManagerService {
   }
 
   /**
-   * Montant réellement économisable après avoir absorbé les dépassements de charges et le flexible négatif
-   * Valeur minimale renvoyée = 0
+   * Actual savable amount after absorbing charge overages and negative flexible
+   * Minimum returned value = 0
    */
   getRealSavableRemaining(): number {
     const month = this.monthSubject.getValue();
@@ -197,7 +197,7 @@ export class MoneyManagerService {
   }
 
   /**
-   * Somme totale des dépassements (charges over + flexible negative)
+   * Total overage sum (charge overage + flexible negative)
    */
   getTotalOverage(): number {
     return this.getChargeOverage() + this.getFlexibleNegativeAmount();
@@ -255,19 +255,19 @@ export class MoneyManagerService {
     const currentYear = today.getFullYear();
     const currentDay = today.getDate();
 
-    // Si nous ne sommes pas dans le mois enregistré, initialiser à 0
+    // If we are not in the stored month, return 0
     if (currentYear !== month.year || currentMonth !== month.month) {
       return 0;
     }
 
-    // Si le salaire n'est pas enregistré, retourner 0
+    // If salary is not recorded, return 0
     if (month.salary === 0) {
       return 0;
     }
 
     let balance = month.salary;
 
-    // Déduire tous les paiements jusqu'à aujourd'hui
+    // Deduct all payments up to today
     const paymentsUntilToday = month.payments.filter(p => p.date <= currentDay);
     for (const payment of paymentsUntilToday) {
       balance -= payment.amount;
@@ -277,7 +277,7 @@ export class MoneyManagerService {
   }
 
   /**
-   * Retourne le montant total des prélèvements restants à venir (après aujourd'hui et aujourd'hui)
+   * Return the total amount of payments left to pay (including today and after)
    */
   getLeftToPay(): number {
     const month = this.monthSubject.getValue();
@@ -294,7 +294,7 @@ export class MoneyManagerService {
   }
 
   /**
-   * Retourne les prélèvements à venir (après aujourd'hui et aujourd'hui), triés par date
+   * Return upcoming payments (including today), sorted by date
    */
   getUpcomingPayments(): Payment[] {
     const month = this.monthSubject.getValue();
@@ -305,7 +305,7 @@ export class MoneyManagerService {
   }
 
   /**
-   * Retourne les prélèvements regroupés par jour pour le calendrier
+   * Return payments grouped by day for the calendar
    */
   getPaymentsByDay(): Map<number, Payment[]> {
     const month = this.monthSubject.getValue();
@@ -351,8 +351,8 @@ export class MoneyManagerService {
   }
 
   /**
-   * Force la recharge depuis le localStorage pour le mois courant
-   * (utile pour rafraîchir l'UI ou après visibilitychange)
+   * Force reload from localStorage for the current month
+   * (useful to refresh the UI or after visibilitychange)
    */
   forceRefresh(): void {
     this.loadFromLocalStorage();
@@ -361,7 +361,7 @@ export class MoneyManagerService {
   }
 
   /**
-   * Retourne le fuseau horaire actuel de l'environnement (ex: 'Europe/Paris')
+   * Return the current environment timezone (e.g., 'Europe/Paris')
    */
   getCurrentTimeZone(): string {
     try {
@@ -372,8 +372,8 @@ export class MoneyManagerService {
   }
 
   /**
-   * Si le mois courant n'existe pas encore dans localStorage, tenter de copier
-   * les réglages essentiels (salary, payments, allocations) depuis le mois précédent.
+   * If the current month does not exist in localStorage, try to copy
+   * essential settings (salary, payments, allocations) from the previous month.
    */
   private ensureCurrentMonthData(): void {
     const now = new Date();
@@ -393,47 +393,47 @@ export class MoneyManagerService {
         year: now.getFullYear(),
         month: now.getMonth(),
         salary: data.salary || 0,
-        // copie superficielle des paiements (on conserve la même liste de prélèvements programmés)
+        // shallow copy of payments (keep the same list of scheduled payments)
         payments: (data.payments || []).map(p => ({ ...p })),
         chargesAllocation: data.chargesAllocation || 0,
         flexibleAllocation: data.flexibleAllocation || 0,
         savableAllocation: data.savableAllocation || 0,
-        // par défaut on réinitialise les dépenses quotidiennes pour le nouveau mois
+        // by default reset daily expenses for the new month
         dailyExpenses: [],
       };
       localStorage.setItem(keyCurrent, JSON.stringify(newMonth));
       this.monthSubject.next(newMonth);
-    } catch (e) {
-      // ignore and exit
-      console.error('ensureCurrentMonthData: erreur lors de la copie du mois précédent', e);
-    }
+      } catch (e) {
+        // ignore and exit
+        console.error('ensureCurrentMonthData: error while copying previous month data', e);
+      }
   }
 
   /**
-   * Lance un watcher qui détecte le passage du jour (minuit) et le retour au premier plan
-   * pour forcer une réévaluation des vues (utile pour PWA / signet iOS).
+   * Start a watcher that detects day rollovers (midnight) and returning to foreground
+   * to force a re-evaluation of views (useful for PWA / iOS bookmark).
    */
   private startDayWatcher(): void {
     let lastCheckDay = new Date().getDate();
     let lastTimeZone = this.getCurrentTimeZone();
 
-    // Vérifier toutes les 30 secondes (suffisant pour détecter minuit ou changement de fuseau)
+    // Check every 30 seconds (sufficient to detect midnight or timezone change)
     window.setInterval(() => {
       const now = new Date();
 
-      // Détection changement de jour
+      // Detect day change
       if (now.getDate() !== lastCheckDay) {
         lastCheckDay = now.getDate();
-        // Si le mois a changé, s'assurer que le mois courant est initialisé
+        // If the month changed, ensure the current month is initialized
         const month = this.getMonth();
         if (month.year !== now.getFullYear() || month.month !== now.getMonth()) {
           this.ensureCurrentMonthData();
         }
-        // forcer émission pour que les composants rafraîchissent leur affichage
+        // force emission so components refresh their display
         this.monthSubject.next({ ...this.getMonth() });
       }
 
-      // Détection changement de fuseau horaire (utile si l'utilisateur change le TZ sans recharger)
+      // Detect timezone change (useful if the user changes TZ without reloading)
       try {
         const tz = this.getCurrentTimeZone();
         if (tz !== lastTimeZone) {
@@ -447,10 +447,10 @@ export class MoneyManagerService {
       }
     }, 30_000);
 
-    // Lorsque l'app revient au premier plan, recharger les données (très utile pour iOS PWA)
+    // When the app returns to the foreground, reload data (very useful for iOS PWA)
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden) {
-        // au retour au premier plan, s'assurer des données du mois courant
+        // on return to foreground, ensure current month data
         this.ensureCurrentMonthData();
         this.forceRefresh();
       }
