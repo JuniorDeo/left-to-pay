@@ -11,6 +11,16 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background-color: #667eea; /* fallback solid color for status bar areas */
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  /* Ensure the app background extends under iOS safe areas (notch / status bar) */
+  /* Fallback constant() for older iOS; env() is the modern standard */
+  padding-top: constant(safe-area-inset-top);
+  padding-top: env(safe-area-inset-top);
+  padding-left: constant(safe-area-inset-left);
+  padding-left: env(safe-area-inset-left);
+  padding-right: constant(safe-area-inset-right);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: constant(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom);
   /* Prevent the iOS/home-screen webview overscroll from revealing white
      by disabling body-level scrolling and overscroll. Scrolling will be
      handled inside the fixed application container. */

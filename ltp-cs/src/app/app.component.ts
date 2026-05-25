@@ -12,7 +12,7 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   @ViewChild('salaryInput') salaryInput!: ElementRef<HTMLInputElement>;
   @ViewChild('paymentLabel') paymentLabel!: ElementRef<HTMLInputElement>;
   @ViewChild('paymentAmount') paymentAmount!: ElementRef<HTMLInputElement>;
@@ -29,6 +29,7 @@ export class AppComponent {
   activeTab: 'home' | 'calendar' | 'daily' = 'home';
   darkMode = false;
   showSalaryConfig = false;
+  timeZone = '';
 
   constructor(
     private moneyManager: MoneyManagerService,
@@ -37,6 +38,7 @@ export class AppComponent {
     this.month$ = this.moneyManager.month$;
     this.darkMode = localStorage.getItem('ltp-dark-mode') === 'true';
     this.initAllocationForm();
+    this.timeZone = this.moneyManager.getCurrentTimeZone();
   }
 
   goToNextMonth(): void {
@@ -48,8 +50,10 @@ export class AppComponent {
   }
 
   ngOnInit(): void {
-    // no continuous patching to avoid overwriting user input while editing
-    // the form will be populated when the panel is opened
+    // Mettre à jour le fuseau horaire et forcer rafraîchissement de l'affichage
+    this.month$.subscribe(() => {
+      this.timeZone = this.moneyManager.getCurrentTimeZone();
+    });
   }
 
   private initAllocationForm(): void {
@@ -228,6 +232,11 @@ export class AppComponent {
 
   getMonthName(): string {
     return this.moneyManager.getMonthName();
+  }
+
+  refreshData(): void {
+    this.moneyManager.forceRefresh();
+    this.timeZone = this.moneyManager.getCurrentTimeZone();
   }
 
   getTodayBalance(): number {

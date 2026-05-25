@@ -10,9 +10,13 @@
       </button>
     </div>
     <div class="month-nav" *ngIf="month$ | async as month">
-      <button class="month-btn" (click)="goToPrevMonth()" title="Mois précédent">◀</button>
+      <button class="month-btn" (click)="goToPrevMonth()" title="Mois précédent" aria-label="Mois précédent">
+        <span class="material-icons" aria-hidden="true">chevron_left</span>
+      </button>
       <p class="current-month">{{ getMonthName() }}</p>
-      <button class="month-btn" (click)="goToNextMonth()" title="Mois suivant">▶</button>
+      <button class="month-btn" (click)="goToNextMonth()" title="Mois suivant" aria-label="Mois suivant">
+        <span class="material-icons" aria-hidden="true">chevron_right</span>
+      </button>
     </div>
   </header>
 
@@ -29,6 +33,17 @@
   <!-- PANEL CONFIG SALAIRE / ALLOCATIONS (ouvrir via le bouton ⚙️) -->
   <div *ngIf="showSalaryConfig" class="alloc-panel card">
     <ng-container *ngIf="month$ | async as month">
+      <div class="settings-panel-header">
+        <div class="settings-panel-meta">
+          <small class="today">{{ getTodayDate() }}</small>
+          <small class="tz">{{ timeZone }}</small>
+        </div>
+        <div class="settings-panel-actions">
+          <button class="btn btn-small btn-refresh" (click)="refreshData()" title="Rafraîchir les données" aria-label="Rafraîchir">
+            <span class="material-icons" aria-hidden="true">refresh</span>
+          </button>
+        </div>
+      </div>
       <form [formGroup]="allocationForm">
         <div class="form-row">
           <div class="form-group">
@@ -227,7 +242,6 @@
       </div>
     </section>
   </main>
-
   <footer class="app-footer">
     <small>© 2026 — Auteur : Freddy HOUENOU</small>
   </footer>

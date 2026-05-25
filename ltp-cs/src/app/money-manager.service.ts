@@ -36,6 +36,8 @@ export class MoneyManagerService {
 
   constructor() {
     this.loadFromLocalStorage();
+    // démarre le watcher qui détecte le passage du jour / changement de mois
+    this.startDayWatcher();
   }
 
   private getCurrentMonth(): Month {
@@ -346,6 +348,113 @@ export class MoneyManagerService {
     if (stored) {
       this.monthSubject.next(JSON.parse(stored));
     }
+  }
+
+  /**
+   * Force la recharge depuis le localStorage pour le mois courant
+   * (utile pour rafraîchir l'UI ou après visibilitychange)
+   */
+  forceRefresh(): void {
+    this.loadFromLocalStorage();
+    // forcer une émission même si les données n'ont pas changé
+    this.monthSubject.next({ ...this.getMonth() });
+  }
+
+  /**
+   * Retourne le fuseau horaire actuel de l'environnement (ex: 'Europe/Paris')
+   */
+  getCurrentTimeZone(): string {
+    try {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone || 'local';
+    } catch (e) {
+      return 'local';
+    }
+  }
+
+  /**
+   * Si le mois courant n'existe pas encore dans localStorage, tenter de copier
+   * les réglages essentiels (salary, payments, allocations) depuis le mois précédent.
+   */
+  private ensureCurrentMonthData(): void {
+    const now = new Date();
+    const keyCurrent = `ltp-${now.getFullYear()}-${now.getMonth()}`;
+    if (localStorage.getItem(keyCurrent)) {
+      return; // déjà présent
+    }
+
+    const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const keyPrev = `ltp-${prev.getFullYear()}-${prev.getMonth()}`;
+    const storedPrev = localStorage.getItem(keyPrev);
+    if (!storedPrev) return;
+
+    try {
+      const data = JSON.parse(storedPrev) as Month;
+      const newMonth: Month = {
+        year: now.getFullYear(),
+        month: now.getMonth(),
+        salary: data.salary || 0,
+        // copie superficielle des paiements (on conserve la même liste de prélèvements programmés)
+        payments: (data.payments || []).map(p => ({ ...p })),
+        chargesAllocation: data.chargesAllocation || 0,
+        flexibleAllocation: data.flexibleAllocation || 0,
+        savableAllocation: data.savableAllocation || 0,
+        // par défaut on réinitialise les dépenses quotidiennes pour le nouveau mois
+        dailyExpenses: [],
+      };
+      localStorage.setItem(keyCurrent, JSON.stringify(newMonth));
+      this.monthSubject.next(newMonth);
+    } catch (e) {
+      // ignore and exit
+      console.error('ensureCurrentMonthData: erreur lors de la copie du mois précédent', e);
+    }
+  }
+
+  /**
+   * Lance un watcher qui détecte le passage du jour (minuit) et le retour au premier plan
+   * pour forcer une réévaluation des vues (utile pour PWA / signet iOS).
+   */
+  private startDayWatcher(): void {
+    let lastCheckDay = new Date().getDate();
+    let lastTimeZone = this.getCurrentTimeZone();
+
+    // Vérifier toutes les 30 secondes (suffisant pour détecter minuit ou changement de fuseau)
+    window.setInterval(() => {
+      const now = new Date();
+
+      // Détection changement de jour
+      if (now.getDate() !== lastCheckDay) {
+        lastCheckDay = now.getDate();
+        // Si le mois a changé, s'assurer que le mois courant est initialisé
+        const month = this.getMonth();
+        if (month.year !== now.getFullYear() || month.month !== now.getMonth()) {
+          this.ensureCurrentMonthData();
+        }
+        // forcer émission pour que les composants rafraîchissent leur affichage
+        this.monthSubject.next({ ...this.getMonth() });
+      }
+
+      // Détection changement de fuseau horaire (utile si l'utilisateur change le TZ sans recharger)
+      try {
+        const tz = this.getCurrentTimeZone();
+        if (tz !== lastTimeZone) {
+          lastTimeZone = tz;
+          // forcer rechargement / réévaluation
+          this.ensureCurrentMonthData();
+          this.monthSubject.next({ ...this.getMonth() });
+        }
+      } catch (e) {
+        // ignore
+      }
+    }, 30_000);
+
+    // Lorsque l'app revient au premier plan, recharger les données (très utile pour iOS PWA)
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        // au retour au premier plan, s'assurer des données du mois courant
+        this.ensureCurrentMonthData();
+        this.forceRefresh();
+      }
+    });
   }
 
   getMonthName(): string {
