@@ -229,25 +229,26 @@ export class MoneyManagerService {
     this.saveToLocalStorage();
   }
 
-  getDailyBalance(): Map<number, number> {
-    const month = this.monthSubject.getValue();
-    const daysInMonth = new Date(month.year, month.month + 1, 0).getDate();
-    const balances = new Map<number, number>();
+  /**
+   * Replace the current list of scheduled payments with the provided list.
+   * Each payment will be normalized (ensure id, numeric amount/date) and persisted.
+   */
+  replacePayments(payments: Payment[]): void {
+    const current = this.monthSubject.getValue();
+    const normalized: Payment[] = (payments || []).map(p => ({
+      id: p.id || Date.now().toString() + Math.random().toString(36).slice(2, 8),
+      label: String(p.label || '').trim(),
+      amount: Number(p.amount) || 0,
+      date: Number(p.date) || 1,
+    }));
 
-    let currentBalance = month.salary;
-    balances.set(0, month.salary); // First day salary
-
-    for (let day = 1; day <= daysInMonth; day++) {
-      const paymentsOnDay = month.payments.filter(p => p.date === day);
-      for (const payment of paymentsOnDay) {
-        currentBalance -= payment.amount;
-      }
-      balances.set(day, currentBalance);
-    }
-
-    return balances;
+    const updated = {
+      ...current,
+      payments: normalized,
+    };
+    this.monthSubject.next(updated);
+    this.saveToLocalStorage();
   }
-
   getTodayBalance(): number {
     const month = this.monthSubject.getValue();
     const today = new Date();
@@ -403,10 +404,10 @@ export class MoneyManagerService {
       };
       localStorage.setItem(keyCurrent, JSON.stringify(newMonth));
       this.monthSubject.next(newMonth);
-      } catch (e) {
-        // ignore and exit
-        console.error('ensureCurrentMonthData: error while copying previous month data', e);
-      }
+    } catch (e) {
+      // ignore and exit
+      console.error('ensureCurrentMonthData: error while copying previous month data', e);
+    }
   }
 
   /**

@@ -23,6 +23,10 @@
     "tslib": "^2.3.0",
     "zone.js": "~0.15.0"
   },
+  "optionalDependencies": {
+    "xlsx": "^0.18.0",
+    "file-saver": "^2.0.5"
+  },
   "devDependencies": {
     "@angular-devkit/build-angular": "^19.2.4",
     "@angular/cli": "^19.2.4",

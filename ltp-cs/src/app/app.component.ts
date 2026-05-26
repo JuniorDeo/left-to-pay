@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { Observable } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import { MoneyManagerService, Month, Payment } from './money-manager.service';
+import { ExcelService } from './excel.service';
+import { NotificationService } from './notification.service';
 import { SortPipe } from './sort.pipe';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 
@@ -24,6 +26,7 @@ export class AppComponent implements OnInit {
   @ViewChild('dailyLabel') dailyLabel!: ElementRef<HTMLInputElement>;
   @ViewChild('dailyAmount') dailyAmount!: ElementRef<HTMLInputElement>;
   @ViewChild('dailyDate') dailyDate!: ElementRef<HTMLInputElement>;
+  @ViewChild('importFileInput') importFileInput!: ElementRef<HTMLInputElement>;
 
   month$: Observable<Month>;
   activeTab: 'home' | 'calendar' | 'daily' = 'home';
@@ -34,6 +37,8 @@ export class AppComponent implements OnInit {
   constructor(
     private moneyManager: MoneyManagerService,
     private fb: FormBuilder,
+    private excelService: ExcelService,
+    public notificationService: NotificationService,
   ) {
     this.month$ = this.moneyManager.month$;
     this.darkMode = localStorage.getItem('ltp-dark-mode') === 'true';
@@ -262,6 +267,55 @@ export class AppComponent implements OnInit {
       this.paymentLabel.nativeElement.value = '';
       this.paymentAmount.nativeElement.value = '';
       this.paymentDate.nativeElement.value = '';
+    }
+  }
+
+  // Export payments to Excel (.xlsx)
+  onExportPayments(): void {
+    const month = this.moneyManager.getMonth();
+    try {
+      this.excelService.exportPayments(month.payments, `prelevements-${month.year}-${month.month + 1}`);
+      this.notificationService.success(`Export téléchargé: prelevements-${month.year}-${month.month + 1}.xlsx`);
+    } catch (e) {
+      console.error(e);
+      this.notificationService.error("Erreur lors de l'export.");
+    }
+  }
+
+  // Trigger file picker
+  openImportDialog(): void {
+    if (this.importFileInput && this.importFileInput.nativeElement) {
+      this.importFileInput.nativeElement.value = '';
+      this.importFileInput.nativeElement.click();
+    }
+  }
+
+  // Handle file selected by user
+  async onImportFileSelected(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    if (!input || !input.files || input.files.length === 0) return;
+    const file = input.files[0];
+    if (!file) return;
+
+    try {
+      const result = await this.excelService.parsePaymentsFile(file);
+      if (result.errors && result.errors.length > 0) {
+        // show first errors to user
+        this.notificationService.error('Import annulé — erreurs :\n' + result.errors.join('\n'));
+        return;
+      }
+
+      // confirm replacement
+      const msg = `Remplacer les ${this.moneyManager.getMonth().payments.length} prélèvements actuels par les ${result.payments.length} du fichier ?`;
+      const ok = await (this.notificationService as any).confirm(msg);
+      if (!ok) return;
+
+      // Convert parsed payments to Payment[] (ids will be assigned by service)
+      this.moneyManager.replacePayments(result.payments as Payment[]);
+      this.notificationService.success(`Import réussi — ${result.payments.length} prélèvements importés.`);
+    } catch (e) {
+      console.error(e);
+      this.notificationService.error("Erreur lors de l'import du fichier.");
     }
   }
 

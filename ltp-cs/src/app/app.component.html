@@ -78,7 +78,7 @@
 
   <!-- HOME TAB -->
   <main class="main" *ngIf="activeTab === 'home'">
-      <!-- OUTSTANDING BALANCE - MAIN SECTION -->
+    <!-- OUTSTANDING BALANCE - MAIN SECTION -->
     <section class="card card-left-to-pay" *ngIf="month$ | async as month">
       <h2>🔴 Reste à Payer</h2>
       <div class="left-to-pay-hero" *ngIf="month.salary > 0">
@@ -164,7 +164,33 @@
 
     <!-- Payments List -->
     <section class="card payments-list-card" *ngIf="month$ | async as month">
-      <h2>📋 Prélèvements / Virements programmés ({{ month.payments.length }})</h2>
+      <h2>
+        📋 Prélèvements / Virements programmés ({{ month.payments.length }})
+        <span class="header-actions">
+          <button class="btn btn-small btn-primary" (click)="onExportPayments()" title="Exporter en .xlsx">⤓ Exporter .xlsx</button>
+          <button class="btn btn-small" (click)="openImportDialog()" title="Importer depuis .xlsx">⤒ Importer .xlsx</button>
+          <input #importFileInput type="file" accept=".xlsx" style="display: none" (change)="onImportFileSelected($event)" />
+        </span>
+      </h2>
+
+      <!-- Notification toasts -->
+      <div class="notification-wrapper" aria-live="polite">
+        <div *ngFor="let n of notificationService.notifications$ | async" class="notification" [class.success]="n.type === 'success'" [class.error]="n.type === 'error'" [class.info]="n.type === 'info'">
+          <div class="notif-message">{{ n.message }}</div>
+          <button class="notif-close" (click)="notificationService.dismiss(n.id)">✖</button>
+        </div>
+      </div>
+
+      <!-- Confirmation modal (powered by NotificationService.confirm) -->
+      <div *ngIf="notificationService.confirmCurrent$ | async as conf" class="confirm-overlay">
+        <div class="confirm-box card">
+          <p class="confirm-message">{{ conf.message }}</p>
+          <div class="confirm-actions">
+            <button class="btn" (click)="notificationService.answerConfirm(false)">Annuler</button>
+            <button class="btn btn-primary" (click)="notificationService.answerConfirm(true)">Confirmer</button>
+          </div>
+        </div>
+      </div>
       <div *ngIf="month.payments.length === 0" class="empty-state">Aucun prélèvement enregistré</div>
       <div *ngIf="month.payments.length > 0" class="payments-table">
         <div class="payment-row header">
