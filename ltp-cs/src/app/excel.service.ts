@@ -1,6 +1,4 @@
 import { Injectable } from '@angular/core';
-import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
 import { Payment } from './money-manager.service';
 
 export interface ParseResult {
@@ -17,29 +15,37 @@ export class ExcelService {
   constructor() {}
 
   exportPayments(payments: Payment[], fileName = 'prélèvements'): void {
-    // Build rows: header + payment rows + total row
-    const rows: any[][] = [];
-    rows.push([this.HEADER_LABEL, this.HEADER_AMOUNT, this.HEADER_DAY]);
-    for (const p of payments) {
-      rows.push([p.label, p.amount, p.date]);
-    }
-    // Note: total row removed per user request
+    // Lazy-load heavy libs so they are not part of the initial bundle
+    (async () => {
+      const XLSX = await import('xlsx');
+      const fileSaver = await import('file-saver');
 
-    const ws = XLSX.utils.aoa_to_sheet(rows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Prélèvements');
+      // Build rows: header + payment rows
+      const rows: any[][] = [];
+      rows.push([this.HEADER_LABEL, this.HEADER_AMOUNT, this.HEADER_DAY]);
+      for (const p of payments) {
+        rows.push([p.label, p.amount, p.date]);
+      }
 
-    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    const blob = new Blob([wbout], { type: 'application/octet-stream' });
-    saveAs(blob, `${fileName}.xlsx`);
+      const ws = (XLSX as any).utils.aoa_to_sheet(rows);
+      const wb = (XLSX as any).utils.book_new();
+      (XLSX as any).utils.book_append_sheet(wb, ws, 'Prélèvements');
+
+      const wbout = (XLSX as any).write(wb, { bookType: 'xlsx', type: 'array' });
+      const blob = new Blob([wbout], { type: 'application/octet-stream' });
+      (fileSaver as any).saveAs(blob, `${fileName}.xlsx`);
+    })();
   }
 
   async parsePaymentsFile(file: File): Promise<ParseResult> {
     const errors: string[] = [];
     const payments: Array<{ label: string; amount: number; date: number }> = [];
 
+    // Lazy-load xlsx to avoid increasing initial bundle size
+    const XLSX = await import('xlsx');
+
     const data = await file.arrayBuffer();
-    const workbook = XLSX.read(data, { type: 'array' });
+    const workbook = (XLSX as any).read(data, { type: 'array' });
     if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
       errors.push('Fichier vide ou feuille introuvable.');
       return { payments, errors };

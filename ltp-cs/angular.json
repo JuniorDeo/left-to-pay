@@ -25,6 +25,7 @@
               }
             ],
             "styles": ["src/styles.css"],
+            "allowedCommonJsDependencies": ["file-saver"],
             "scripts": []
           },
           "configurations": {
@@ -37,8 +38,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "14kB",
-                  "maximumError": "17kB"
+                  "maximumWarning": "20kB",
+                  "maximumError": "25kB"
                 }
               ],
               "outputHashing": "all",

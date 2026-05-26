@@ -307,7 +307,7 @@ export class AppComponent implements OnInit {
 
       // confirm replacement
       const msg = `Remplacer les ${this.moneyManager.getMonth().payments.length} prélèvements actuels par les ${result.payments.length} du fichier ?`;
-      const ok = await (this.notificationService as any).confirm(msg);
+      const ok = await this.notificationService.confirm(msg);
       if (!ok) return;
 
       // Convert parsed payments to Payment[] (ids will be assigned by service)
