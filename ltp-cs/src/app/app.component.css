@@ -244,6 +244,23 @@
   vertical-align: middle;
 }
 
+/* Distinct styles for Export / Import header buttons */
+.btn-export {
+  background: linear-gradient(90deg, rgba(16,185,129,0.95), rgba(34,197,94,0.95));
+  color: white;
+  border: 1px solid rgba(2,6,23,0.06);
+}
+.btn-export:hover { filter: brightness(0.96); }
+.dark .btn-export { background: linear-gradient(90deg, rgba(34,197,94,0.95), rgba(16,185,129,0.95)); }
+
+.btn-import {
+  background: linear-gradient(90deg, rgba(79,70,229,0.95), rgba(99,102,241,0.95));
+  color: white;
+  border: 1px solid rgba(2,6,23,0.06);
+}
+.btn-import:hover { filter: brightness(0.96); }
+.dark .btn-import { background: linear-gradient(90deg, rgba(99,102,241,0.95), rgba(79,70,229,0.95)); }
+
 /* Notification toasts */
 .notification-wrapper {
   position: fixed;
@@ -564,6 +581,63 @@
 .btn-small {
   padding: 0.5rem 0.75rem !important;
   font-size: 0.85rem !important;
+}
+
+/* Inline edit inputs inside payment rows */
+.payment-row input.input-full {
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Action buttons spacing and edit button styling */
+.payments-table .payment-row .col-action {
+  display: flex;
+  gap: 0.5rem; /* small space between Edit and Delete */
+  justify-content: flex-end;
+}
+
+/* Make small buttons (non-danger) visible and accessible in both light and dark themes */
+.btn-small:not(.btn-danger) {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  border-radius: 0.5rem;
+  padding: 0.35rem 0.6rem !important;
+}
+.btn-small:not(.btn-danger):hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+.dark .btn-small:not(.btn-danger) {
+  border-color: rgba(255, 255, 255, 0.06);
+  color: var(--text-secondary);
+}
+.dark .btn-small:not(.btn-danger):hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* Danger (delete) button styling to be clearly visible in both light and dark modes */
+.btn-small.btn-danger {
+  /* Softer, less glaring red for light mode */
+  background: #d9534f; /* muted danger */
+  color: white;
+  border: 1px solid rgba(0,0,0,0.08);
+  padding: 0.35rem 0.6rem !important;
+  border-radius: 0.5rem;
+}
+.btn-small.btn-danger:hover {
+  filter: brightness(0.97);
+}
+.dark .btn-small.btn-danger {
+  /* Dark-mode: deeper, less saturated red for readability */
+  background: #9f2a2a; /* deep muted red */
+  border-color: rgba(255,255,255,0.06);
+  color: white;
+}
+.dark .btn-small.btn-danger:hover {
+  filter: brightness(1.02);
 }
 .display-salary {
   margin-top: 1rem;

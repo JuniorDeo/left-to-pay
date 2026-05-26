@@ -6,11 +6,11 @@ import { MoneyManagerService, Month, Payment } from './money-manager.service';
 import { ExcelService } from './excel.service';
 import { NotificationService } from './notification.service';
 import { SortPipe } from './sort.pipe';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 @Component({
   selector: 'app-root',
-  imports: [CommonModule, SortPipe, ReactiveFormsModule],
+  imports: [CommonModule, SortPipe, ReactiveFormsModule, FormsModule],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
@@ -33,6 +33,11 @@ export class AppComponent implements OnInit {
   darkMode = false;
   showSalaryConfig = false;
   timeZone = '';
+  // edit state for payments
+  editingPaymentId: string | null = null;
+  editLabel = '';
+  editAmount = '';
+  editDate = '';
 
   constructor(
     private moneyManager: MoneyManagerService,
@@ -268,6 +273,44 @@ export class AppComponent implements OnInit {
       this.paymentAmount.nativeElement.value = '';
       this.paymentDate.nativeElement.value = '';
     }
+  }
+
+  // Edit existing payment
+  startEdit(payment: Payment): void {
+    this.editingPaymentId = payment.id;
+    this.editLabel = payment.label;
+    this.editAmount = String(payment.amount);
+    this.editDate = String(payment.date);
+  }
+
+  cancelEdit(): void {
+    this.editingPaymentId = null;
+    this.editLabel = '';
+    this.editAmount = '';
+    this.editDate = '';
+  }
+
+  saveEdit(): void {
+    if (!this.editingPaymentId) return;
+    const label = this.editLabel.trim();
+    const amount = parseFloat(this.editAmount);
+    const date = parseInt(this.editDate, 10);
+    if (!label) {
+      this.notificationService.error('Libellé requis.');
+      return;
+    }
+    if (!isFinite(amount) || amount <= 0) {
+      this.notificationService.error('Montant invalide.');
+      return;
+    }
+    if (!Number.isInteger(date) || date < 1 || date > 31) {
+      this.notificationService.error('Jour invalide (1–31).');
+      return;
+    }
+
+    this.moneyManager.updatePayment(this.editingPaymentId, { label, amount, date });
+    this.notificationService.success('Prélèvement mis à jour.');
+    this.cancelEdit();
   }
 
   // Export payments to Excel (.xlsx)

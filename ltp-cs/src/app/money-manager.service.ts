@@ -229,6 +229,15 @@ export class MoneyManagerService {
     this.saveToLocalStorage();
   }
 
+  /** Update an existing payment by id. Only provided fields are updated. */
+  updatePayment(paymentId: string, changes: Partial<Payment>): void {
+    const current = this.monthSubject.getValue();
+    const payments = current.payments.map(p => (p.id === paymentId ? { ...p, ...changes } : p));
+    const updated = { ...current, payments };
+    this.monthSubject.next(updated);
+    this.saveToLocalStorage();
+  }
+
   /**
    * Replace the current list of scheduled payments with the provided list.
    * Each payment will be normalized (ensure id, numeric amount/date) and persisted.

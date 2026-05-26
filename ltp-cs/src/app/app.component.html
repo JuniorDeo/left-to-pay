@@ -167,8 +167,8 @@
       <h2>
         📋 Prélèvements / Virements programmés ({{ month.payments.length }})
         <span class="header-actions">
-          <button class="btn btn-small btn-primary" (click)="onExportPayments()" title="Exporter en .xlsx">⤓ Exporter .xlsx</button>
-          <button class="btn btn-small" (click)="openImportDialog()" title="Importer depuis .xlsx">⤒ Importer .xlsx</button>
+          <button class="btn btn-small btn-export" (click)="onExportPayments()" title="Exporter en .xlsx">⤓ Exporter .xlsx</button>
+          <button class="btn btn-small btn-import" (click)="openImportDialog()" title="Importer depuis .xlsx">⤒ Importer .xlsx</button>
           <input #importFileInput type="file" accept=".xlsx" style="display: none" (change)="onImportFileSelected($event)" />
         </span>
       </h2>
@@ -200,12 +200,30 @@
           <div class="col-action">Action</div>
         </div>
         <div *ngFor="let payment of month.payments | sort: 'date'" class="payment-row">
-          <div class="col-label">{{ payment.label }}</div>
-          <div class="col-date">{{ payment.date }}</div>
-          <div class="col-amount">{{ payment.amount | currency: 'EUR' }}</div>
-          <div class="col-action">
-            <button (click)="removePayment(payment.id)" class="btn btn-small btn-danger" title="Supprimer">🗑️</button>
-          </div>
+          <ng-container *ngIf="editingPaymentId !== payment.id; else editRow">
+            <div class="col-label">{{ payment.label }}</div>
+            <div class="col-date">{{ payment.date }}</div>
+            <div class="col-amount">{{ payment.amount | currency: 'EUR' }}</div>
+            <div class="col-action">
+              <button (click)="startEdit(payment)" class="btn btn-small" title="Modifier">✏️</button>
+              <button (click)="removePayment(payment.id)" class="btn btn-small btn-danger" title="Supprimer">🗑️</button>
+            </div>
+          </ng-container>
+          <ng-template #editRow>
+            <div class="col-label">
+              <input type="text" [(ngModel)]="editLabel" class="input-full" />
+            </div>
+            <div class="col-date">
+              <input type="number" [(ngModel)]="editDate" min="1" max="31" class="input-full" />
+            </div>
+            <div class="col-amount">
+              <input type="number" [(ngModel)]="editAmount" step="0.01" class="input-full" />
+            </div>
+            <div class="col-action">
+              <button (click)="saveEdit()" class="btn btn-small btn-primary">✔️</button>
+              <button (click)="cancelEdit()" class="btn btn-small">✖</button>
+            </div>
+          </ng-template>
         </div>
       </div>
     </section>
