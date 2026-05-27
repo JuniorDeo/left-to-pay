@@ -133,9 +133,12 @@ export class MoneyManagerService {
   }
 
   /** Add / remove daily expenses (Daily) */
-  addDailyExpense(label: string, amount: number, date: number): void {
+  addDailyExpense(label: string | null | undefined, amount: number, date?: number | null): void {
     const current = this.monthSubject.getValue();
-    const expense: DailyExpense = { id: Date.now().toString(), label, amount, date };
+    const finalLabel = label && String(label).trim() ? String(label).trim() : 'Inconnu';
+    const today = new Date().getDate();
+    const finalDate = typeof date === 'number' && Number.isInteger(date) && date >= 1 && date <= 31 ? date : today;
+    const expense: DailyExpense = { id: Date.now().toString(), label: finalLabel, amount, date: finalDate };
     const updated = { ...current, dailyExpenses: [...(current.dailyExpenses || []), expense] };
     this.monthSubject.next(updated);
     this.saveToLocalStorage();

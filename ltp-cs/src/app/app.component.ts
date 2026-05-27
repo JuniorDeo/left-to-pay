@@ -235,15 +235,33 @@ export class AppComponent implements OnInit {
   }
 
   addDailyExpense(): void {
-    const label = this.dailyLabel.nativeElement.value.trim();
+    const rawLabel = this.dailyLabel.nativeElement.value;
+    const label = rawLabel ? rawLabel.trim() : '';
     const amount = parseFloat(this.dailyAmount.nativeElement.value);
-    const date = parseInt(this.dailyDate.nativeElement.value, 10);
-    if (label && amount > 0 && date >= 1 && date <= 31) {
-      this.moneyManager.addDailyExpense(label, amount, date);
-      this.dailyLabel.nativeElement.value = '';
-      this.dailyAmount.nativeElement.value = '';
-      this.dailyDate.nativeElement.value = '';
+    const parsedDate = parseInt(this.dailyDate.nativeElement.value, 10);
+
+    // amount is mandatory and must be > 0
+    if (!isFinite(amount) || amount <= 0) {
+      this.notificationService.error('Montant obligatoire et doit être supérieur à 0.');
+      return;
     }
+
+    // If date not provided or invalid, pass undefined and service will fallback to today
+    const date = Number.isInteger(parsedDate) && parsedDate >= 1 && parsedDate <= 31 ? parsedDate : undefined;
+
+    // Allow empty label — service will fallback to 'Inconnu'
+    this.moneyManager.addDailyExpense(label || undefined, amount, date);
+
+    // success notification with basic info
+    const usedLabel = label && label.length > 0 ? label : 'Inconnu';
+    const usedDate = date ?? new Date().getDate();
+    const formatted = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
+    this.notificationService.success(`Dépense ajoutée — ${usedLabel} • ${formatted} • jour ${usedDate}`);
+
+    // clear inputs
+    this.dailyLabel.nativeElement.value = '';
+    this.dailyAmount.nativeElement.value = '';
+    this.dailyDate.nativeElement.value = '';
   }
 
   removeDailyExpense(expenseId: string): void {
@@ -314,11 +332,22 @@ export class AppComponent implements OnInit {
   }
 
   // Export payments to Excel (.xlsx)
-  onExportPayments(): void {
+  async onExportPayments(): Promise<void> {
     const month = this.moneyManager.getMonth();
+    const baseName = `prelevements-${month.year}-${month.month + 1}`;
     try {
-      this.excelService.exportPayments(month.payments, `prelevements-${month.year}-${month.month + 1}`);
-      this.notificationService.success(`Export téléchargé: prelevements-${month.year}-${month.month + 1}.xlsx`);
+      const res = await this.excelService.exportPaymentsAsync(month.payments, baseName);
+      if (res.saved) {
+        if (res.method === 'share') {
+          this.notificationService.success("Fichier partagé. Choisissez 'Enregistrer dans Fichiers' ou 'Partager' pour l'enregistrer sur iPhone.");
+        } else if (res.method === 'filesaver' || res.method === 'ms' || res.method === 'anchor') {
+          this.notificationService.success(`Export téléchargé: ${baseName}.xlsx`);
+        } else {
+          this.notificationService.success('Export déclenché. Vérifiez votre dossier de téléchargements.');
+        }
+      } else {
+        this.notificationService.error("Impossible d'exporter le fichier.");
+      }
     } catch (e) {
       console.error(e);
       this.notificationService.error("Erreur lors de l'export.");

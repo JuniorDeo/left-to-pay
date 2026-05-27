@@ -244,22 +244,36 @@
   vertical-align: middle;
 }
 
+/* Negative amount styling for payment rows and balance displays */
+.negative-amt {
+  color: #d32f2f;
+  font-weight: 700;
+}
+
 /* Distinct styles for Export / Import header buttons */
 .btn-export {
-  background: linear-gradient(90deg, rgba(16,185,129,0.95), rgba(34,197,94,0.95));
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.95), rgba(34, 197, 94, 0.95));
   color: white;
-  border: 1px solid rgba(2,6,23,0.06);
+  border: 1px solid rgba(2, 6, 23, 0.06);
 }
-.btn-export:hover { filter: brightness(0.96); }
-.dark .btn-export { background: linear-gradient(90deg, rgba(34,197,94,0.95), rgba(16,185,129,0.95)); }
+.btn-export:hover {
+  filter: brightness(0.96);
+}
+.dark .btn-export {
+  background: linear-gradient(90deg, rgba(34, 197, 94, 0.95), rgba(16, 185, 129, 0.95));
+}
 
 .btn-import {
-  background: linear-gradient(90deg, rgba(79,70,229,0.95), rgba(99,102,241,0.95));
+  background: linear-gradient(90deg, rgba(79, 70, 229, 0.95), rgba(99, 102, 241, 0.95));
   color: white;
-  border: 1px solid rgba(2,6,23,0.06);
+  border: 1px solid rgba(2, 6, 23, 0.06);
 }
-.btn-import:hover { filter: brightness(0.96); }
-.dark .btn-import { background: linear-gradient(90deg, rgba(99,102,241,0.95), rgba(79,70,229,0.95)); }
+.btn-import:hover {
+  filter: brightness(0.96);
+}
+.dark .btn-import {
+  background: linear-gradient(90deg, rgba(99, 102, 241, 0.95), rgba(79, 70, 229, 0.95));
+}
 
 /* Notification toasts */
 .notification-wrapper {
@@ -623,7 +637,7 @@
   /* Softer, less glaring red for light mode */
   background: #d9534f; /* muted danger */
   color: white;
-  border: 1px solid rgba(0,0,0,0.08);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   padding: 0.35rem 0.6rem !important;
   border-radius: 0.5rem;
 }
@@ -633,7 +647,7 @@
 .dark .btn-small.btn-danger {
   /* Dark-mode: deeper, less saturated red for readability */
   background: #9f2a2a; /* deep muted red */
-  border-color: rgba(255,255,255,0.06);
+  border-color: rgba(255, 255, 255, 0.06);
   color: white;
 }
 .dark .btn-small.btn-danger:hover {
@@ -1084,6 +1098,31 @@
 /* DAILY EXPENSES SECTION */
 .daily-card h2 {
   border-bottom-color: var(--text-secondary);
+}
+
+/* Center the flexible remaining value in the daily header line.
+   Use a 3-column grid so the left label stays left and the numeric value is centered.
+   On narrow screens fall back to a stacked, centered layout. */
+.daily-card h2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.5rem;
+}
+.daily-card h2 > div:first-child {
+  justify-self: start;
+}
+.daily-card h2 > div:nth-child(2) {
+  justify-self: start;
+}
+@media (max-width: 639px) {
+  .daily-card h2 {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+  .daily-card h2 > div:first-child,
+  .daily-card h2 > div:nth-child(2) {
+    justify-self: center;
+  }
 }
 .daily-list {
   display: flex;

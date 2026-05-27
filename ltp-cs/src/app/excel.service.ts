@@ -13,28 +13,85 @@ export class ExcelService {
   private HEADER_DAY = 'Jour';
 
   constructor() {}
+  /**
+   * Export payments to an .xlsx file. Returns an object describing the method/result.
+   */
+  async exportPaymentsAsync(payments: Payment[], fileName = 'prelevements'): Promise<{ saved: boolean; method: string }> {
+    const XLSX = await import('xlsx');
 
-  exportPayments(payments: Payment[], fileName = 'prélèvements'): void {
-    // Lazy-load heavy libs so they are not part of the initial bundle
-    (async () => {
-      const XLSX = await import('xlsx');
-      const fileSaver = await import('file-saver');
+    // Build rows: header + payment rows
+    const rows: any[][] = [];
+    rows.push([this.HEADER_LABEL, this.HEADER_AMOUNT, this.HEADER_DAY]);
+    for (const p of payments) {
+      rows.push([p.label, p.amount, p.date]);
+    }
 
-      // Build rows: header + payment rows
-      const rows: any[][] = [];
-      rows.push([this.HEADER_LABEL, this.HEADER_AMOUNT, this.HEADER_DAY]);
-      for (const p of payments) {
-        rows.push([p.label, p.amount, p.date]);
+    const ws = (XLSX as any).utils.aoa_to_sheet(rows);
+    const wb = (XLSX as any).utils.book_new();
+    (XLSX as any).utils.book_append_sheet(wb, ws, 'Prelevements');
+
+    const wbout = (XLSX as any).write(wb, { bookType: 'xlsx', type: 'array' });
+    const mime = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    const blob = new Blob([wbout], { type: mime });
+    const filenameFinal = `${fileName}.xlsx`;
+
+    // 1) Try Web Share API with files (mobile iOS/Android)
+    try {
+      const nav: any = navigator as any;
+      if (nav && nav.canShare) {
+        try {
+          const file = new File([blob], filenameFinal, { type: mime });
+          if (nav.canShare({ files: [file] })) {
+            await nav.share({ files: [file], title: filenameFinal });
+            return { saved: true, method: 'share' };
+          }
+        } catch (e) {
+          // sharing failed, we'll fallback
+        }
       }
+    } catch (e) {
+      // ignore
+    }
 
-      const ws = (XLSX as any).utils.aoa_to_sheet(rows);
-      const wb = (XLSX as any).utils.book_new();
-      (XLSX as any).utils.book_append_sheet(wb, ws, 'Prélèvements');
+    // 2) msSaveOrOpenBlob (IE/old Edge)
+    try {
+      const nav: any = navigator as any;
+      if (nav && nav.msSaveOrOpenBlob) {
+        nav.msSaveOrOpenBlob(blob, filenameFinal);
+        return { saved: true, method: 'ms' };
+      }
+    } catch (e) {
+      // ignore
+    }
 
-      const wbout = (XLSX as any).write(wb, { bookType: 'xlsx', type: 'array' });
-      const blob = new Blob([wbout], { type: 'application/octet-stream' });
-      (fileSaver as any).saveAs(blob, `${fileName}.xlsx`);
-    })();
+    // 3) Try file-saver (desktop browsers)
+    try {
+      const fileSaver = await import('file-saver');
+      (fileSaver as any).saveAs(blob, filenameFinal);
+      return { saved: true, method: 'filesaver' };
+    } catch (e) {
+      // fallback to anchor below
+    }
+
+    // 4) Anchor fallback (may open in new tab on iOS — user must save manually from there)
+    try {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filenameFinal;
+      // Some browsers require append to body
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        try {
+          URL.revokeObjectURL(url);
+          a.remove();
+        } catch (e) {}
+      }, 2000);
+      return { saved: true, method: 'anchor' };
+    } catch (e) {
+      return { saved: false, method: 'failed' };
+    }
   }
 
   async parsePaymentsFile(file: File): Promise<ParseResult> {

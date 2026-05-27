@@ -1,6 +1,6 @@
 {
-  "name": "Left To Pay",
-  "short_name": "Left To Pay",
+  "name": "Balance due",
+  "short_name": "Balance due",
   "display": "standalone",
   "scope": "./",
   "start_url": "./",

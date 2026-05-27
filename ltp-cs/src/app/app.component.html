@@ -4,7 +4,7 @@
       <button class="alloc-toggle" (click)="openSalaryConfig()" [title]="showSalaryConfig ? 'Fermer configuration' : 'Configurer salaire/allocations'">
         {{ showSalaryConfig ? '✖️' : '⚙️' }}
       </button>
-      <h1>💰 Left To Pay</h1>
+      <h1>💰 Balance due</h1>
       <button class="theme-toggle" (click)="toggleDarkMode()" [title]="darkMode ? 'Mode clair' : 'Mode sombre'">
         {{ darkMode ? '☀️' : '🌙' }}
       </button>
@@ -120,14 +120,18 @@
           <span class="label">Flexible</span>
           <span class="value"
             >{{ month.flexibleAllocation || 0 | currency: 'EUR' }}
-            <small class="muted">— reste: {{ getFlexibleRemaining() | currency: 'EUR' }}</small>
+            <small class="muted"
+              >— reste: <span [class.negative-amt]="getFlexibleRemaining() <= 0">{{ getFlexibleRemaining() | currency: 'EUR' }}</span></small
+            >
           </span>
         </div>
         <div class="line">
           <span class="label">Économisable</span>
           <span class="value"
             >{{ month.savableAllocation || 0 | currency: 'EUR' }}
-            <small class="muted">— réel : {{ getRealSavableRemaining() | currency: 'EUR' }}</small>
+            <small class="muted"
+              >— réel : <span [class.negative-amt]="getRealSavableRemaining() <= 0">{{ getRealSavableRemaining() | currency: 'EUR' }}</span></small
+            >
           </span>
         </div>
 
@@ -173,24 +177,7 @@
         </span>
       </h2>
 
-      <!-- Notification toasts -->
-      <div class="notification-wrapper" aria-live="polite">
-        <div *ngFor="let n of notificationService.notifications$ | async" class="notification" [class.success]="n.type === 'success'" [class.error]="n.type === 'error'" [class.info]="n.type === 'info'">
-          <div class="notif-message">{{ n.message }}</div>
-          <button class="notif-close" (click)="notificationService.dismiss(n.id)">✖</button>
-        </div>
-      </div>
 
-      <!-- Confirmation modal (powered by NotificationService.confirm) -->
-      <div *ngIf="notificationService.confirmCurrent$ | async as conf" class="confirm-overlay">
-        <div class="confirm-box card">
-          <p class="confirm-message">{{ conf.message }}</p>
-          <div class="confirm-actions">
-            <button class="btn" (click)="notificationService.answerConfirm(false)">Annuler</button>
-            <button class="btn btn-primary" (click)="notificationService.answerConfirm(true)">Confirmer</button>
-          </div>
-        </div>
-      </div>
       <div *ngIf="month.payments.length === 0" class="empty-state">Aucun prélèvement enregistré</div>
       <div *ngIf="month.payments.length > 0" class="payments-table">
         <div class="payment-row header">
@@ -254,7 +241,10 @@
   <!-- DAILY TAB -->
   <main class="main" *ngIf="activeTab === 'daily'">
     <section class="card daily-card" *ngIf="month$ | async as month">
-      <h2>🧾 Quotidien — Flexible restant : {{ getFlexibleRemaining() | currency: 'EUR' }}</h2>
+      <h2>
+        <div>🧾 Quotidien — Flexible restant :</div>
+        <div [class.negative-amt]="getFlexibleRemaining() <= 0">{{ getFlexibleRemaining() | currency: 'EUR' }}</div>
+      </h2>
       <div *ngIf="(month.dailyExpenses || []).length === 0" class="empty-state">Aucune dépense quotidienne enregistrée</div>
       <div class="form-row">
         <div class="form-group">
@@ -286,6 +276,25 @@
       </div>
     </section>
   </main>
+  <!-- Global notification toasts (always present) -->
+  <div class="notification-wrapper" aria-live="polite">
+    <div *ngFor="let n of notificationService.notifications$ | async" class="notification" [class.success]="n.type === 'success'" [class.error]="n.type === 'error'" [class.info]="n.type === 'info'">
+      <div class="notif-message">{{ n.message }}</div>
+      <button class="notif-close" (click)="notificationService.dismiss(n.id)">✖</button>
+    </div>
+  </div>
+
+  <!-- Global confirmation modal (powered by NotificationService.confirm) -->
+  <div *ngIf="notificationService.confirmCurrent$ | async as conf" class="confirm-overlay">
+    <div class="confirm-box card">
+      <p class="confirm-message">{{ conf.message }}</p>
+      <div class="confirm-actions">
+        <button class="btn" (click)="notificationService.answerConfirm(false)">Annuler</button>
+        <button class="btn btn-primary" (click)="notificationService.answerConfirm(true)">Confirmer</button>
+      </div>
+    </div>
+  </div>
+
   <footer class="app-footer">
     <small>© 2026 — Auteur : Freddy HOUENOU</small>
   </footer>
